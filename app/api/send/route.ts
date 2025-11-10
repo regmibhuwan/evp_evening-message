@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
         recipient_email: categoryMapping.email,
         recipient_name: categoryMapping.recipientName,
         worker_name: workerName || null,
+        worker_email: workerEmail || null,
         topic,
         message,
         timestamp,

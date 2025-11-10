@@ -9,7 +9,7 @@ import { CATEGORY_MAPPINGS } from '@/config';
 
 // Email "from" address - update this to your verified domain in production
 // For development, Resend allows using onboarding@resend.dev
-const EMAIL_FROM = process.env.EMAIL_FROM || 'EVP Evening Messages <onboarding@resend.dev>';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'Eden Valley Poultry - Evening Shift <onboarding@resend.dev>';
 
 // Lazy initialization of Resend to avoid errors during build
 function getResend() {

@@ -44,9 +44,11 @@ export async function POST(request: NextRequest) {
         recipientEmail: message.recipient_email,
         recipientName: message.recipient_name,
         workerName: message.worker_name,
+        workerEmail: message.worker_email || null,
         topic: message.topic,
         message: message.message,
         timestamp: message.timestamp,
+        isAnonymous: false,
       });
 
       updateMessageStatus(messageId, 'sent');

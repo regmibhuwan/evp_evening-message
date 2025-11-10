@@ -42,6 +42,13 @@ export function getDb(): Database.Database {
     } catch (e) {
       // Column already exists, ignore
     }
+    
+    // Add worker_email column if it doesn't exist (for existing databases)
+    try {
+      db.exec(`ALTER TABLE messages ADD COLUMN worker_email TEXT`);
+    } catch (e) {
+      // Column already exists, ignore
+    }
   }
   
   return db;
@@ -53,6 +60,7 @@ export interface Message {
   recipient_email: string;
   recipient_name: string;
   worker_name: string | null;
+  worker_email: string | null;
   topic: string;
   message: string;
   timestamp: string;
@@ -63,8 +71,8 @@ export interface Message {
 export function insertMessage(data: Omit<Message, 'id' | 'status' | 'created_at'>): number {
   const db = getDb();
   const stmt = db.prepare(`
-    INSERT INTO messages (category, recipient_email, recipient_name, worker_name, topic, message, timestamp, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+    INSERT INTO messages (category, recipient_email, recipient_name, worker_name, worker_email, topic, message, timestamp, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
   `);
   
   const result = stmt.run(
@@ -72,6 +80,7 @@ export function insertMessage(data: Omit<Message, 'id' | 'status' | 'created_at'
     data.recipient_email,
     data.recipient_name,
     data.worker_name || null,
+    data.worker_email || null,
     data.topic,
     data.message,
     data.timestamp
