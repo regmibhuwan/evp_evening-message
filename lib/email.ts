@@ -110,39 +110,4 @@ Department: ${data.category}
   }
 }
 
-/**
- * Sends notification email to supervisor about pending message
- */
-export async function notifySupervisor(supervisorEmail: string, messageId: number, data: EmailData): Promise<void> {
-  const subject = `Pending Message Approval Required - ${data.category}`;
-  
-  const body = `
-A new evening shift message requires your approval.
-
-Message ID: ${messageId}
-Department: ${data.category}
-Topic: ${data.topic}
-From: ${data.workerName || 'Anonymous'}
-Timestamp: ${data.timestamp}
-
-Message:
-${data.message}
-
-To approve or reject, visit: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/supervisor
-  `.trim();
-
-  const resend = getResend();
-
-  try {
-    await resend.emails.send({
-      from: EMAIL_FROM,
-      to: supervisorEmail,
-      subject,
-      text: body,
-    });
-  } catch (error) {
-    console.error('Error sending supervisor notification:', error);
-    throw new Error('Failed to send supervisor notification');
-  }
-}
 

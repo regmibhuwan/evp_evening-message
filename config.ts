@@ -44,15 +44,3 @@ export const CATEGORY_MAPPINGS: CategoryMapping[] = [
   }
 ];
 
-/**
- * Set to true to require supervisor approval before sending emails
- * When true, messages are stored and supervisor must approve before sending
- */
-export const REQUIRE_SUPERVISOR_APPROVAL = false;
-
-/**
- * Supervisor email for approval notifications
- * Only used if REQUIRE_SUPERVISOR_APPROVAL is true
- */
-export const SUPERVISOR_EMAIL = "supervisor@edenvalleypoultry.com";
-

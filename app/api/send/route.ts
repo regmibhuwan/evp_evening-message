@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CATEGORY_MAPPINGS, REQUIRE_SUPERVISOR_APPROVAL, SUPERVISOR_EMAIL } from '@/config';
-import { sendEmail, notifySupervisor } from '@/lib/email';
-import { insertMessage } from '@/lib/db';
+import { CATEGORY_MAPPINGS } from '@/config';
+import { sendEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,45 +39,7 @@ export async function POST(request: NextRequest) {
       timeStyle: 'long',
     });
 
-    // If supervisor approval is required, store message and notify supervisor
-    if (REQUIRE_SUPERVISOR_APPROVAL) {
-      const messageId = insertMessage({
-        category,
-        recipient_email: categoryMapping.email,
-        recipient_name: categoryMapping.recipientName,
-        worker_name: workerName || null,
-        worker_email: workerEmail || null,
-        topic,
-        message,
-        timestamp,
-      });
-
-      // Notify supervisor
-      try {
-        await notifySupervisor(SUPERVISOR_EMAIL, messageId, {
-          category,
-          recipientEmail: categoryMapping.email,
-          recipientName: categoryMapping.recipientName,
-          workerName: workerName || null,
-          workerEmail: workerEmail || null,
-          topic,
-          message,
-          timestamp,
-          isAnonymous: isAnonymous || false,
-        });
-      } catch (error) {
-        console.error('Failed to notify supervisor:', error);
-        // Continue anyway - message is stored
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: 'Message submitted for approval',
-        messageId,
-      });
-    }
-
-    // Otherwise, send email immediately
+    // Send email immediately
     try {
       await sendEmail({
         category,
