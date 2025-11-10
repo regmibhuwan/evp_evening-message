@@ -1,5 +1,5 @@
 /**
- * SQLite database for storing messages when supervisor approval is required
+ * SQLite database utilities (currently not used, kept for future features)
  */
 
 import Database from 'better-sqlite3';

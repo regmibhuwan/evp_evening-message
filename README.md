@@ -6,7 +6,8 @@ A simple mobile-first web app for workers to submit messages to office staff who
 
 - **Mobile-first design** - Optimized for phone use
 - **Category-based routing** - Messages automatically sent to the correct recipient
-- **Optional supervisor approval** - Configurable workflow for message approval
+- **Anonymous feedback option** - Submit feedback anonymously for sensitive matters
+- **Direct reply support** - Recipients can reply directly to sender's email
 - **Clean, simple UI** - Minimal interface focused on ease of use
 
 ## Setup
@@ -24,7 +25,7 @@ Create a `.env.local` file in the root directory:
 ```env
 RESEND_API_KEY=your_resend_api_key_here
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-EMAIL_FROM=EVP Evening Messages <onboarding@resend.dev>
+EMAIL_FROM=Eden Valley Poultry - Evening Shift <onboarding@resend.dev>
 ```
 
 **Getting a Resend API Key:**
@@ -49,28 +50,18 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 Edit `config.ts` to customize:
 
 - **Category mappings** - Add or modify categories and their email recipients
-- **Supervisor approval** - Set `REQUIRE_SUPERVISOR_APPROVAL` to `true` to enable approval workflow
-- **Supervisor email** - Set `SUPERVISOR_EMAIL` when approval is enabled
 
 ## Category Mappings
 
 The app includes the following default categories:
 
-- **Payroll / CFO** → Luke Hempel (lukeh@edenvalleypoultry.com)
-- **Business Operations** → Troy Lenihan (troyl@edenvalleypoultry.com)
-- **Sustainability** → Dean Gurney (dgurney@edenvalleypoultry.com)
-- **People Services (HR)** → Nicole Hawley (nicoleh@edenvalleypoultry.com)
-- **General EVP TVS** → joannm@edenvalleypoultry.com
+- **Anonymous Company Feedback** - For anonymous company-related feedback
+- **Payroll / CFO Inquiry** - For payroll and financial inquiries
+- **Business Operations** - For operations-related messages
+- **People Services (HR)** - For HR-related inquiries
+- **General Inquiry** - For general questions and messages
 
-## Supervisor Approval Workflow
-
-When `REQUIRE_SUPERVISOR_APPROVAL` is set to `true`:
-
-1. Messages are stored in a SQLite database
-2. Supervisor receives email notification
-3. Supervisor visits `/supervisor` to approve/reject messages
-4. Approved messages are sent to recipients
-5. Rejected messages are marked as rejected
+All categories can be customized in `config.ts` to route to specific email addresses.
 
 ## Deployment
 
@@ -92,7 +83,7 @@ npm start
 Make sure to set:
 - `RESEND_API_KEY` - Your Resend API key
 - `NEXT_PUBLIC_APP_URL` - Your production URL (e.g., `https://yourdomain.com`)
-- `EMAIL_FROM` - Your verified email address (e.g., `EVP Evening Messages <messages@yourdomain.com>`)
+- `EMAIL_FROM` - Your verified email address (e.g., `Eden Valley Poultry - Evening Shift <messages@yourdomain.com>`)
 
 ### Database
 
@@ -107,17 +98,15 @@ The SQLite database is stored in the `data/` directory. For production, consider
 evp/
 ├── app/
 │   ├── api/
-│   │   ├── send/              # Main message sending endpoint
-│   │   └── supervisor/        # Supervisor approval endpoints
-│   ├── supervisor/            # Supervisor approval page
+│   │   └── send/              # Main message sending endpoint
 │   ├── success/               # Success confirmation page
 │   ├── layout.tsx             # Root layout
 │   ├── page.tsx               # Main worker form
 │   └── globals.css            # Global styles
 ├── lib/
-│   ├── db.ts                 # Database utilities
-│   └── email.ts            # Email sending utilities
-├── config.ts               # Configuration and category mappings
+│   ├── db.ts                 # Database utilities (optional, for future features)
+│   └── email.ts              # Email sending utilities
+├── config.ts                 # Configuration and category mappings
 ├── package.json
 └── README.md
 ```
