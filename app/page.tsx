@@ -134,11 +134,20 @@ export default function Home() {
               required
             >
               <option value="">Select a category...</option>
-              {CATEGORY_MAPPINGS.map((cat) => (
-                <option key={cat.label} value={cat.label}>
-                  {cat.label}
-                </option>
-              ))}
+              <optgroup label="Departments">
+                {CATEGORY_MAPPINGS.slice(0, 5).map((cat) => (
+                  <option key={cat.label} value={cat.label}>
+                    {cat.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Individuals">
+                {CATEGORY_MAPPINGS.slice(5).map((cat) => (
+                  <option key={cat.label} value={cat.label}>
+                    {cat.label}
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </div>
 
