@@ -29,7 +29,6 @@ export interface EmailData {
   topic: string;
   message: string;
   timestamp: string;
-  timeForSubject?: string;
   isAnonymous?: boolean;
 }
 
