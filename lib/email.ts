@@ -9,7 +9,7 @@ import { CATEGORY_MAPPINGS } from '@/config';
 
 // Email "from" address - update this to your verified domain in production
 // For development, Resend allows using onboarding@resend.dev
-const EMAIL_FROM = process.env.EMAIL_FROM || 'Eden Valley Poultry - Evening Shift <onboarding@resend.dev>';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'Eden Valley Poultry - Night Shift <onboarding@resend.dev>';
 
 // Lazy initialization of Resend to avoid errors during build
 function getResend() {
@@ -29,6 +29,7 @@ export interface EmailData {
   topic: string;
   message: string;
   timestamp: string;
+  timeForSubject?: string;
   isAnonymous?: boolean;
 }
 
@@ -46,10 +47,12 @@ export async function sendEmail(data: EmailData): Promise<void> {
   // Subject should show sender name, not category name
   const senderName = isAnonymous 
     ? 'Anonymous'
-    : (data.workerName || 'Evening Shift Team');
+    : (data.workerName || 'Night Shift Team');
+  // Include time in subject if available
+  const timeLabel = data.timeForSubject ? ` [${data.timeForSubject}]` : '';
   const subject = isAnonymous 
-    ? `[Night Shift] Anonymous Feedback: ${data.topic}`
-    : `[Night Shift] ${data.topic} - ${senderName}`;
+    ? `[Night Shift${timeLabel}] Anonymous Feedback: ${data.topic}`
+    : `[Night Shift${timeLabel}] ${data.topic} - ${senderName}`;
   
   // Extract the actual message content (after greeting)
   const extractActualMessage = (fullMessage: string): { greeting: string; actualMessage: string } => {
@@ -99,7 +102,7 @@ ${greeting ? `<p>${escapeHtml(greeting).replace(/\n/g, '<br>')}</p>` : ''}${actu
 <p>${escapeHtml(actualMessage).replace(/\n/g, '<br>')}</p>` : ''}
 
 <hr>
-<p>This message was submitted anonymously through the EVP Evening Message Sender system to encourage open and honest feedback. The sender's identity has been protected.</p>
+<p>This message was submitted anonymously through the EVP Night Shift Message Sender system to encourage open and honest feedback. The sender's identity has been protected.</p>
 <p><small>Submitted: ${escapeHtml(data.timestamp)}<br>Category: ${escapeHtml(data.category)}</small></p>
 <p><small>If you have any questions or need clarification, please note that this was submitted anonymously and direct response is not available.</small></p>
   `.trim() : `
@@ -112,7 +115,7 @@ ${data.workerEmail ? `<p>From: ${escapeHtml(data.workerEmail)}</p>` : ''}
 ${categoryMapping.phoneExt ? `<p>Phone Extension: ${escapeHtml(categoryMapping.phoneExt)}</p>` : ''}
 
 <hr>
-<p><small>Submitted via EVP Evening Message Sender<br>Date: ${escapeHtml(data.timestamp)}<br>Department: ${escapeHtml(data.category)}</small></p>
+<p><small>Submitted via EVP Night Shift Message Sender<br>Date: ${escapeHtml(data.timestamp)}<br>Night Shift</small></p>
   `.trim();
 
   // Plain text version for email clients that don't support HTML
@@ -124,7 +127,7 @@ ${greeting ? greeting : ''}${actualMessage ? `MESSAGE:
 ${actualMessage}` : ''}
 
 ---
-This message was submitted anonymously through the EVP Evening Message Sender system to encourage open and honest feedback. The sender's identity has been protected.
+This message was submitted anonymously through the EVP Night Shift Message Sender system to encourage open and honest feedback. The sender's identity has been protected.
 
 Submitted: ${data.timestamp}
 Category: ${data.category}
@@ -141,9 +144,9 @@ ${data.workerEmail ? `\nFrom: ${data.workerEmail}` : ''}
 ${categoryMapping.phoneExt ? `Phone Extension: ${categoryMapping.phoneExt}` : ''}
 
 ---
-Submitted via EVP Evening Message Sender
+Submitted via EVP Night Shift Message Sender
 Date: ${data.timestamp}
-Department: ${data.category}
+Night Shift
   `.trim();
 
   const resend = getResend();

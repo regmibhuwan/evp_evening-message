@@ -1,5 +1,5 @@
 /**
- * Configuration for EVP Evening Message Sender
+ * Configuration for EVP Night Shift Message Sender
  * 
  * Category mappings and system settings
  */
