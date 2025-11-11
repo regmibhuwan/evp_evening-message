@@ -49,7 +49,9 @@ export async function sendEmail(data: EmailData): Promise<void> {
   
   // Professional email format - looks like a real email
   const body = isAnonymous ? `
-**TOPIC: ${data.topic}**
+═══════════════════════════════════════════════════════════
+TOPIC: ${data.topic.toUpperCase()}
+═══════════════════════════════════════════════════════════
 
 ${data.message}
 
@@ -64,7 +66,9 @@ If you have any questions or need clarification, please note that this was submi
 Best regards,
 EVP Evening Shift Team
   `.trim() : `
-**TOPIC: ${data.topic}**
+═══════════════════════════════════════════════════════════
+TOPIC: ${data.topic.toUpperCase()}
+═══════════════════════════════════════════════════════════
 
 ${data.message}
 
