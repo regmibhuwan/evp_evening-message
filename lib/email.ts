@@ -48,11 +48,9 @@ export async function sendEmail(data: EmailData): Promise<void> {
   const senderName = isAnonymous 
     ? 'Anonymous'
     : (data.workerName || 'Night Shift Team');
-  // Include time in subject if available
-  const timeLabel = data.timeForSubject ? ` [${data.timeForSubject}]` : '';
   const subject = isAnonymous 
-    ? `[Night Shift${timeLabel}] Anonymous Feedback: ${data.topic}`
-    : `[Night Shift${timeLabel}] ${data.topic} - ${senderName}`;
+    ? `[Night Shift] Anonymous Feedback: ${data.topic}`
+    : `[Night Shift] ${data.topic} - ${senderName}`;
   
   // Extract the actual message content (after greeting)
   const extractActualMessage = (fullMessage: string): { greeting: string; actualMessage: string } => {
@@ -94,10 +92,8 @@ export async function sendEmail(data: EmailData): Promise<void> {
       .replace(/'/g, '&#039;');
   };
 
-  // Professional email format - topic and message in bold (using HTML for proper formatting)
+  // Professional email format - message in bold (topic is in subject, not needed here)
   const htmlBody = isAnonymous ? `
-<p><strong>TOPIC: ${escapeHtml(data.topic)}</strong></p>
-
 ${greeting ? `<p>${escapeHtml(greeting).replace(/\n/g, '<br>')}</p>` : ''}${actualMessage ? `<p><strong>MESSAGE:</strong></p>
 <p>${escapeHtml(actualMessage).replace(/\n/g, '<br>')}</p>` : ''}
 
@@ -106,12 +102,10 @@ ${greeting ? `<p>${escapeHtml(greeting).replace(/\n/g, '<br>')}</p>` : ''}${actu
 <p><small>Submitted: ${escapeHtml(data.timestamp)}<br>Category: ${escapeHtml(data.category)}</small></p>
 <p><small>If you have any questions or need clarification, please note that this was submitted anonymously and direct response is not available.</small></p>
   `.trim() : `
-<p><strong>TOPIC: ${escapeHtml(data.topic)}</strong></p>
-
 ${greeting ? `<p>${escapeHtml(greeting).replace(/\n/g, '<br>')}</p>` : ''}${actualMessage ? `<p><strong>MESSAGE:</strong></p>
 <p>${escapeHtml(actualMessage).replace(/\n/g, '<br>')}</p>` : ''}
 
-${data.workerEmail ? `<p>From: ${escapeHtml(data.workerEmail)}</p>` : ''}
+${data.workerName && data.workerEmail ? `<p>${escapeHtml(data.workerName)}<br>${escapeHtml(data.workerEmail)}</p>` : data.workerEmail ? `<p>From: ${escapeHtml(data.workerEmail)}</p>` : ''}
 ${categoryMapping.phoneExt ? `<p>Phone Extension: ${escapeHtml(categoryMapping.phoneExt)}</p>` : ''}
 
 <hr>
@@ -120,8 +114,6 @@ ${categoryMapping.phoneExt ? `<p>Phone Extension: ${escapeHtml(categoryMapping.p
 
   // Plain text version for email clients that don't support HTML
   const textBody = isAnonymous ? `
-TOPIC: ${data.topic}
-
 ${greeting ? greeting : ''}${actualMessage ? `MESSAGE:
 
 ${actualMessage}` : ''}
@@ -134,13 +126,11 @@ Category: ${data.category}
 
 If you have any questions or need clarification, please note that this was submitted anonymously and direct response is not available.
   `.trim() : `
-TOPIC: ${data.topic}
-
 ${greeting ? greeting : ''}${actualMessage ? `MESSAGE:
 
 ${actualMessage}` : ''}
 
-${data.workerEmail ? `\nFrom: ${data.workerEmail}` : ''}
+${data.workerName && data.workerEmail ? `${data.workerName}\n${data.workerEmail}` : data.workerEmail ? `From: ${data.workerEmail}` : ''}
 ${categoryMapping.phoneExt ? `Phone Extension: ${categoryMapping.phoneExt}` : ''}
 
 ---
