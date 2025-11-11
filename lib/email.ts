@@ -47,13 +47,47 @@ export async function sendEmail(data: EmailData): Promise<void> {
     ? `[Night Shift] Anonymous Feedback: ${data.topic}`
     : `[Night Shift] ${data.topic} - ${data.category}`;
   
+  // Extract the actual message content (after greeting)
+  const extractActualMessage = (fullMessage: string): { greeting: string; actualMessage: string } => {
+    const greetingPattern = /^Dear\s+[^,\n]+,\s*\n\nI hope this message finds you well\. I am writing to you regarding:\s*\n\n/i;
+    const match = fullMessage.match(greetingPattern);
+    
+    if (match) {
+      return {
+        greeting: match[0],
+        actualMessage: fullMessage.replace(greetingPattern, '').trim()
+      };
+    }
+    
+    // If no standard greeting, check for any "Dear" pattern
+    const dearMatch = fullMessage.match(/^(Dear\s+[^,\n]+,\s*\n\n[^\n]+\n\n)/i);
+    if (dearMatch) {
+      return {
+        greeting: dearMatch[0],
+        actualMessage: fullMessage.replace(dearMatch[0], '').trim()
+      };
+    }
+    
+    // If no greeting found, treat entire message as actual message
+    return {
+      greeting: '',
+      actualMessage: fullMessage.trim()
+    };
+  };
+
+  const { greeting, actualMessage } = extractActualMessage(data.message);
+
   // Professional email format - looks like a real email
   const body = isAnonymous ? `
 ═══════════════════════════════════════════════════════════
 TOPIC: ${data.topic.toUpperCase()}
 ═══════════════════════════════════════════════════════════
 
-${data.message}
+${greeting ? greeting : ''}${actualMessage ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${actualMessage}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : ''}
 
 ---
 This message was submitted anonymously through the EVP Evening Message Sender system to encourage open and honest feedback. The sender's identity has been protected.
@@ -62,19 +96,19 @@ Submitted: ${data.timestamp}
 Category: ${data.category}
 
 If you have any questions or need clarification, please note that this was submitted anonymously and direct response is not available.
-
-Best regards,
-EVP Evening Shift Team
   `.trim() : `
 ═══════════════════════════════════════════════════════════
 TOPIC: ${data.topic.toUpperCase()}
 ═══════════════════════════════════════════════════════════
 
-${data.message}
+${greeting ? greeting : ''}${actualMessage ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-${data.workerName ? `\nBest regards,\n${data.workerName}` : '\nBest regards,\nEvening Shift Team'}
-${data.workerEmail ? `\n${data.workerEmail}` : ''}
-${categoryMapping.phoneExt ? `\nPhone Extension: ${categoryMapping.phoneExt}` : ''}
+${actualMessage}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : ''}
+
+${data.workerEmail ? `\nFrom: ${data.workerEmail}` : ''}
+${categoryMapping.phoneExt ? `Phone Extension: ${categoryMapping.phoneExt}` : ''}
 
 ---
 Submitted via EVP Evening Message Sender

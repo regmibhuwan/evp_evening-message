@@ -15,13 +15,35 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Update message with default greeting when category changes (only if message is empty)
+  // Update greeting automatically when category changes
   useEffect(() => {
     if (category) {
       const selectedCategory = CATEGORY_MAPPINGS.find(c => c.label === category);
-      if (selectedCategory && !message.trim()) {
-        const greeting = `Dear ${selectedCategory.recipientName},\n\nI hope this message finds you well. I am writing to you regarding:\n\n`;
-        setMessage(greeting);
+      if (selectedCategory) {
+        const newGreeting = `Dear ${selectedCategory.recipientName},\n\nI hope this message finds you well. I am writing to you regarding:\n\n`;
+        
+        // If message is empty, set the greeting
+        if (!message.trim()) {
+          setMessage(newGreeting);
+        } else {
+          // If message exists, check if it starts with "Dear [name]" and replace it
+          const dearPattern = /^Dear\s+[^,\n]+,\s*\n\nI hope this message finds you well\. I am writing to you regarding:\s*\n\n/i;
+          if (dearPattern.test(message)) {
+            // Replace the greeting part
+            const actualMessage = message.replace(dearPattern, '');
+            setMessage(newGreeting + actualMessage);
+          } else if (message.startsWith('Dear ')) {
+            // If it starts with "Dear" but different format, replace just the name part
+            const nameMatch = message.match(/^Dear\s+([^,\n]+),/i);
+            if (nameMatch) {
+              const restOfMessage = message.substring(message.indexOf(',') + 1);
+              setMessage(`Dear ${selectedCategory.recipientName},${restOfMessage}`);
+            }
+          } else {
+            // If no greeting, add it at the beginning
+            setMessage(newGreeting + message);
+          }
+        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
