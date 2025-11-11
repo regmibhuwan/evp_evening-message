@@ -43,9 +43,13 @@ export async function sendEmail(data: EmailData): Promise<void> {
   }
 
   const isAnonymous = data.isAnonymous || data.category === 'Anonymous Company Feedback';
+  // Subject should show sender name, not category name
+  const senderName = isAnonymous 
+    ? 'Anonymous'
+    : (data.workerName || 'Evening Shift Team');
   const subject = isAnonymous 
     ? `[Night Shift] Anonymous Feedback: ${data.topic}`
-    : `[Night Shift] ${data.topic} - ${data.category}`;
+    : `[Night Shift] ${data.topic} - ${senderName}`;
   
   // Extract the actual message content (after greeting)
   const extractActualMessage = (fullMessage: string): { greeting: string; actualMessage: string } => {
@@ -77,17 +81,13 @@ export async function sendEmail(data: EmailData): Promise<void> {
 
   const { greeting, actualMessage } = extractActualMessage(data.message);
 
-  // Professional email format - looks like a real email
+  // Professional email format - topic and message in bold (using markdown-style formatting)
   const body = isAnonymous ? `
-═══════════════════════════════════════════════════════════
-TOPIC: ${data.topic.toUpperCase()}
-═══════════════════════════════════════════════════════════
+**TOPIC: ${data.topic}**
 
-${greeting ? greeting : ''}${actualMessage ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${greeting ? greeting : ''}${actualMessage ? `**MESSAGE:**
 
-${actualMessage}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : ''}
+${actualMessage}` : ''}
 
 ---
 This message was submitted anonymously through the EVP Evening Message Sender system to encourage open and honest feedback. The sender's identity has been protected.
@@ -97,15 +97,11 @@ Category: ${data.category}
 
 If you have any questions or need clarification, please note that this was submitted anonymously and direct response is not available.
   `.trim() : `
-═══════════════════════════════════════════════════════════
-TOPIC: ${data.topic.toUpperCase()}
-═══════════════════════════════════════════════════════════
+**TOPIC: ${data.topic}**
 
-${greeting ? greeting : ''}${actualMessage ? `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${greeting ? greeting : ''}${actualMessage ? `**MESSAGE:**
 
-${actualMessage}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : ''}
+${actualMessage}` : ''}
 
 ${data.workerEmail ? `\nFrom: ${data.workerEmail}` : ''}
 ${categoryMapping.phoneExt ? `Phone Extension: ${categoryMapping.phoneExt}` : ''}

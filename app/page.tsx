@@ -75,9 +75,9 @@ export default function Home() {
     // Check if anonymous feedback is selected
     const isAnonymousFeedback = category === 'Anonymous Company Feedback' || isAnonymous;
     
-    // Require name and email for non-anonymous submissions
+    // Require name for non-anonymous submissions
     if (!isAnonymousFeedback && !workerName.trim()) {
-      setError('Your name is required for this category. Use "Anonymous Company Feedback" category for anonymous submissions.');
+      setError('Your name is required. Please enter your name or select "Anonymous Company Feedback" for anonymous submissions.');
       setIsSubmitting(false);
       return;
     }
@@ -97,6 +97,15 @@ export default function Home() {
         setIsSubmitting(false);
         return;
       }
+    }
+    
+    // Validate that message has actual content (not just greeting)
+    const greetingPattern = /^Dear\s+[^,\n]+,\s*\n\nI hope this message finds you well\. I am writing to you regarding:\s*\n\n/i;
+    const messageWithoutGreeting = message.replace(greetingPattern, '').trim();
+    if (!messageWithoutGreeting) {
+      setError('Please enter your message content after the greeting.');
+      setIsSubmitting(false);
+      return;
     }
 
     try {
@@ -147,7 +156,7 @@ export default function Home() {
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="category">
-              Category <span className="optional">(required)</span>
+              Category <span style={{ color: '#c33' }}>*</span>
             </label>
             <select
               id="category"
@@ -189,7 +198,7 @@ export default function Home() {
 
           <div className="form-group">
             <label htmlFor="topic">
-              Topic <span className="optional">(required)</span>
+              Topic <span style={{ color: '#c33' }}>*</span>
             </label>
             <input
               type="text"
@@ -203,7 +212,7 @@ export default function Home() {
 
           <div className="form-group">
             <label htmlFor="message">
-              Message <span className="optional">(required)</span>
+              Message <span style={{ color: '#c33' }}>*</span>
             </label>
             <textarea
               id="message"
@@ -240,7 +249,7 @@ export default function Home() {
             <>
               <div className="form-group">
                 <label htmlFor="workerName">
-                  Your Name <span className="optional">(required)</span>
+                  Your Name <span style={{ color: '#c33' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -254,7 +263,7 @@ export default function Home() {
 
               <div className="form-group">
                 <label htmlFor="workerEmail">
-                  Your Email Address <span className="optional">(required)</span>
+                  Your Email Address <span style={{ color: '#c33' }}>*</span>
                 </label>
                 <input
                   type="email"
