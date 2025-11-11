@@ -88,6 +88,12 @@ Department: ${data.category}
     ? data.workerEmail 
     : undefined;
 
+  // BCC the sender so they get a copy of the email in their inbox
+  // This allows them to track the conversation thread
+  const bcc = !isAnonymous && data.workerEmail 
+    ? [data.workerEmail]
+    : undefined;
+
   try {
     const result = await resend.emails.send({
       from: EMAIL_FROM,
@@ -95,6 +101,7 @@ Department: ${data.category}
       subject,
       text: body,
       ...(replyTo && { reply_to: replyTo }),
+      ...(bcc && { bcc: bcc }),
     });
     
     if (result.error) {

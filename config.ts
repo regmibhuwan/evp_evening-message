@@ -97,6 +97,12 @@ export const CATEGORY_MAPPINGS: CategoryMapping[] = [
     recipientName: "Dean",
     email: "regmibhuwan555@gmail.com",
     phoneExt: ""
+  },
+  {
+    label: "Ryan",
+    recipientName: "Ryan",
+    email: "regmibhuwan555@gmail.com",
+    phoneExt: ""
   }
 ];
 
