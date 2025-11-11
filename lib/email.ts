@@ -81,28 +81,38 @@ export async function sendEmail(data: EmailData): Promise<void> {
 
   const { greeting, actualMessage } = extractActualMessage(data.message);
 
+  // HTML escape function to prevent XSS
+  const escapeHtml = (text: string): string => {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
   // Professional email format - topic and message in bold (using HTML for proper formatting)
   const htmlBody = isAnonymous ? `
-<p><strong>TOPIC: ${data.topic}</strong></p>
+<p><strong>TOPIC: ${escapeHtml(data.topic)}</strong></p>
 
-${greeting ? `<p>${greeting.replace(/\n/g, '<br>')}</p>` : ''}${actualMessage ? `<p><strong>MESSAGE:</strong></p>
-<p>${actualMessage.replace(/\n/g, '<br>')}</p>` : ''}
+${greeting ? `<p>${escapeHtml(greeting).replace(/\n/g, '<br>')}</p>` : ''}${actualMessage ? `<p><strong>MESSAGE:</strong></p>
+<p>${escapeHtml(actualMessage).replace(/\n/g, '<br>')}</p>` : ''}
 
 <hr>
 <p>This message was submitted anonymously through the EVP Evening Message Sender system to encourage open and honest feedback. The sender's identity has been protected.</p>
-<p><small>Submitted: ${data.timestamp}<br>Category: ${data.category}</small></p>
+<p><small>Submitted: ${escapeHtml(data.timestamp)}<br>Category: ${escapeHtml(data.category)}</small></p>
 <p><small>If you have any questions or need clarification, please note that this was submitted anonymously and direct response is not available.</small></p>
   `.trim() : `
-<p><strong>TOPIC: ${data.topic}</strong></p>
+<p><strong>TOPIC: ${escapeHtml(data.topic)}</strong></p>
 
-${greeting ? `<p>${greeting.replace(/\n/g, '<br>')}</p>` : ''}${actualMessage ? `<p><strong>MESSAGE:</strong></p>
-<p>${actualMessage.replace(/\n/g, '<br>')}</p>` : ''}
+${greeting ? `<p>${escapeHtml(greeting).replace(/\n/g, '<br>')}</p>` : ''}${actualMessage ? `<p><strong>MESSAGE:</strong></p>
+<p>${escapeHtml(actualMessage).replace(/\n/g, '<br>')}</p>` : ''}
 
-${data.workerEmail ? `<p>From: ${data.workerEmail}</p>` : ''}
-${categoryMapping.phoneExt ? `<p>Phone Extension: ${categoryMapping.phoneExt}</p>` : ''}
+${data.workerEmail ? `<p>From: ${escapeHtml(data.workerEmail)}</p>` : ''}
+${categoryMapping.phoneExt ? `<p>Phone Extension: ${escapeHtml(categoryMapping.phoneExt)}</p>` : ''}
 
 <hr>
-<p><small>Submitted via EVP Evening Message Sender<br>Date: ${data.timestamp}<br>Department: ${data.category}</small></p>
+<p><small>Submitted via EVP Evening Message Sender<br>Date: ${escapeHtml(data.timestamp)}<br>Department: ${escapeHtml(data.category)}</small></p>
   `.trim();
 
   // Plain text version for email clients that don't support HTML
