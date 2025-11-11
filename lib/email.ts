@@ -108,7 +108,7 @@ ${data.workerName && data.workerEmail ? `<p>${escapeHtml(data.workerName)}<br>${
 ${categoryMapping.phoneExt ? `<p>Phone Extension: ${escapeHtml(categoryMapping.phoneExt)}</p>` : ''}
 
 <hr>
-<p><small>Submitted via EVP Night Shift Message Sender<br>Date: ${escapeHtml(data.timestamp)}<br>Night Shift</small></p>
+<p><small>Submitted via EVP Night Shift Message Sender<br>Date: ${escapeHtml(data.timestamp)}</small></p>
   `.trim();
 
   // Plain text version for email clients that don't support HTML
@@ -135,7 +135,6 @@ ${categoryMapping.phoneExt ? `Phone Extension: ${categoryMapping.phoneExt}` : ''
 ---
 Submitted via EVP Night Shift Message Sender
 Date: ${data.timestamp}
-Night Shift
   `.trim();
 
   const resend = getResend();
