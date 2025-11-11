@@ -39,14 +39,6 @@ export async function POST(request: NextRequest) {
       dateStyle: 'full',
       timeStyle: 'long',
     });
-    
-    // Get time for subject line
-    const timeForSubject = new Date().toLocaleString('en-US', {
-      timeZone: 'America/Halifax',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
 
     // Send email immediately
     try {
@@ -59,7 +51,6 @@ export async function POST(request: NextRequest) {
         topic,
         message,
         timestamp,
-        timeForSubject,
         isAnonymous: isAnonymous || false,
       });
     } catch (emailError) {
