@@ -49,12 +49,11 @@ export async function sendEmail(data: EmailData): Promise<void> {
   
   // Professional email format - looks like a real email
   const body = isAnonymous ? `
-Dear ${data.recipientName},
-
-I hope this message finds you well. I am writing to provide feedback regarding: ${data.topic}
+**TOPIC: ${data.topic}**
 
 ${data.message}
 
+---
 This message was submitted anonymously through the EVP Evening Message Sender system to encourage open and honest feedback. The sender's identity has been protected.
 
 Submitted: ${data.timestamp}
@@ -65,9 +64,7 @@ If you have any questions or need clarification, please note that this was submi
 Best regards,
 EVP Evening Shift Team
   `.trim() : `
-Dear ${data.recipientName},
-
-I hope this message finds you well. I am writing to you regarding: ${data.topic}
+**TOPIC: ${data.topic}**
 
 ${data.message}
 

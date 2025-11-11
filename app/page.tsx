@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CATEGORY_MAPPINGS } from '@/config';
 
@@ -14,6 +14,17 @@ export default function Home() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Update message with default greeting when category changes
+  useEffect(() => {
+    if (category && !message.trim()) {
+      const selectedCategory = CATEGORY_MAPPINGS.find(c => c.label === category);
+      if (selectedCategory) {
+        const greeting = `Dear ${selectedCategory.recipientName},\n\nI hope this message finds you well. I am writing to you regarding:\n\n`;
+        setMessage(greeting);
+      }
+    }
+  }, [category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,10 +137,12 @@ export default function Home() {
                   setIsAnonymous(true);
                   setWorkerName('');
                   setWorkerEmail('');
+                  setMessage(''); // Clear message for anonymous
                 } else if (isAnonymous && selectedCategory !== 'Anonymous Company Feedback') {
                   // Keep anonymous state if user manually checked it
                   // Only clear if switching away from anonymous category
                 }
+                // Message will be updated by useEffect when category changes
               }}
               required
             >
