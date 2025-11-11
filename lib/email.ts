@@ -81,11 +81,35 @@ export async function sendEmail(data: EmailData): Promise<void> {
 
   const { greeting, actualMessage } = extractActualMessage(data.message);
 
-  // Professional email format - topic and message in bold (using markdown-style formatting)
-  const body = isAnonymous ? `
-**TOPIC: ${data.topic}**
+  // Professional email format - topic and message in bold (using HTML for proper formatting)
+  const htmlBody = isAnonymous ? `
+<p><strong>TOPIC: ${data.topic}</strong></p>
 
-${greeting ? greeting : ''}${actualMessage ? `**MESSAGE:**
+${greeting ? `<p>${greeting.replace(/\n/g, '<br>')}</p>` : ''}${actualMessage ? `<p><strong>MESSAGE:</strong></p>
+<p>${actualMessage.replace(/\n/g, '<br>')}</p>` : ''}
+
+<hr>
+<p>This message was submitted anonymously through the EVP Evening Message Sender system to encourage open and honest feedback. The sender's identity has been protected.</p>
+<p><small>Submitted: ${data.timestamp}<br>Category: ${data.category}</small></p>
+<p><small>If you have any questions or need clarification, please note that this was submitted anonymously and direct response is not available.</small></p>
+  `.trim() : `
+<p><strong>TOPIC: ${data.topic}</strong></p>
+
+${greeting ? `<p>${greeting.replace(/\n/g, '<br>')}</p>` : ''}${actualMessage ? `<p><strong>MESSAGE:</strong></p>
+<p>${actualMessage.replace(/\n/g, '<br>')}</p>` : ''}
+
+${data.workerEmail ? `<p>From: ${data.workerEmail}</p>` : ''}
+${categoryMapping.phoneExt ? `<p>Phone Extension: ${categoryMapping.phoneExt}</p>` : ''}
+
+<hr>
+<p><small>Submitted via EVP Evening Message Sender<br>Date: ${data.timestamp}<br>Department: ${data.category}</small></p>
+  `.trim();
+
+  // Plain text version for email clients that don't support HTML
+  const textBody = isAnonymous ? `
+TOPIC: ${data.topic}
+
+${greeting ? greeting : ''}${actualMessage ? `MESSAGE:
 
 ${actualMessage}` : ''}
 
@@ -97,9 +121,9 @@ Category: ${data.category}
 
 If you have any questions or need clarification, please note that this was submitted anonymously and direct response is not available.
   `.trim() : `
-**TOPIC: ${data.topic}**
+TOPIC: ${data.topic}
 
-${greeting ? greeting : ''}${actualMessage ? `**MESSAGE:**
+${greeting ? greeting : ''}${actualMessage ? `MESSAGE:
 
 ${actualMessage}` : ''}
 
@@ -130,7 +154,8 @@ Department: ${data.category}
       from: EMAIL_FROM,
       to: data.recipientEmail,
       subject,
-      text: body,
+      html: htmlBody,
+      text: textBody,
       ...(replyTo && { reply_to: replyTo }),
       ...(bcc && { bcc: bcc }),
     });
