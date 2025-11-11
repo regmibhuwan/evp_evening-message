@@ -15,15 +15,16 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Update message with default greeting when category changes
+  // Update message with default greeting when category changes (only if message is empty)
   useEffect(() => {
-    if (category && !message.trim()) {
+    if (category) {
       const selectedCategory = CATEGORY_MAPPINGS.find(c => c.label === category);
-      if (selectedCategory) {
+      if (selectedCategory && !message.trim()) {
         const greeting = `Dear ${selectedCategory.recipientName},\n\nI hope this message finds you well. I am writing to you regarding:\n\n`;
         setMessage(greeting);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
