@@ -184,7 +184,7 @@ export default function Home() {
     <div className="container">
       <div className="form-container">
         <h1>EVP Night Shift Message</h1>
-        <p className="subtitle">Communicate with office staff</p>
+        <p className="subtitle">Communicate with office staffs</p>
 
         {error && <div className="error-message">{error}</div>}
 
