@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { CATEGORY_MAPPINGS } from '@/config';
 
@@ -14,6 +14,25 @@ export default function Home() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   // Update greeting automatically when category changes
   useEffect(() => {
@@ -48,6 +67,22 @@ export default function Home() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
+
+  const handleCategorySelect = (selectedCategory: string) => {
+    setCategory(selectedCategory);
+    setIsDropdownOpen(false);
+    // Auto-enable anonymous for Anonymous Company Feedback
+    if (selectedCategory === 'Anonymous Company Feedback') {
+      setIsAnonymous(true);
+      setWorkerName('');
+      setWorkerEmail('');
+      setMessage(''); // Clear message for anonymous
+    } else if (isAnonymous && selectedCategory !== 'Anonymous Company Feedback') {
+      // Keep anonymous state if user manually checked it
+      // Only clear if switching away from anonymous category
+    }
+    // Message will be updated by useEffect when category changes
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,42 +193,63 @@ export default function Home() {
             <label htmlFor="category">
               Category <span style={{ color: '#c33' }}>*</span>
             </label>
-            <select
-              id="category"
-              value={category}
-              onChange={(e) => {
-                const selectedCategory = e.target.value;
-                setCategory(selectedCategory);
-                // Auto-enable anonymous for Anonymous Company Feedback
-                if (selectedCategory === 'Anonymous Company Feedback') {
-                  setIsAnonymous(true);
-                  setWorkerName('');
-                  setWorkerEmail('');
-                  setMessage(''); // Clear message for anonymous
-                } else if (isAnonymous && selectedCategory !== 'Anonymous Company Feedback') {
-                  // Keep anonymous state if user manually checked it
-                  // Only clear if switching away from anonymous category
-                }
-                // Message will be updated by useEffect when category changes
-              }}
-              required
-            >
-              <option value="">Select a category...</option>
-              <optgroup label="Departments">
-                {CATEGORY_MAPPINGS.slice(0, 5).map((cat) => (
-                  <option key={cat.label} value={cat.label}>
-                    {cat.label}
-                  </option>
-                ))}
-              </optgroup>
-              <optgroup label="Individuals">
-                {CATEGORY_MAPPINGS.slice(5).map((cat) => (
-                  <option key={cat.label} value={cat.label}>
-                    {cat.label}
-                  </option>
-                ))}
-              </optgroup>
-            </select>
+            <div className="custom-dropdown" ref={dropdownRef}>
+              <button
+                type="button"
+                className={`custom-dropdown-toggle ${!category ? 'placeholder' : ''} ${isDropdownOpen ? 'open' : ''}`}
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                aria-haspopup="listbox"
+                aria-expanded={isDropdownOpen}
+              >
+                <span>{category || 'Select a category...'}</span>
+                <svg
+                  width="12"
+                  height="8"
+                  viewBox="0 0 12 8"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}
+                >
+                  <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {isDropdownOpen && (
+                <div className="custom-dropdown-menu">
+                  <div className="dropdown-group">
+                    <div className="dropdown-group-label">Departments</div>
+                    {CATEGORY_MAPPINGS.slice(0, 5).map((cat) => (
+                      <button
+                        key={cat.label}
+                        type="button"
+                        className={`dropdown-option ${category === cat.label ? 'selected' : ''}`}
+                        onClick={() => handleCategorySelect(cat.label)}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="dropdown-group">
+                    <div className="dropdown-group-label">Individuals</div>
+                    {CATEGORY_MAPPINGS.slice(5).map((cat) => (
+                      <button
+                        key={cat.label}
+                        type="button"
+                        className={`dropdown-option ${category === cat.label ? 'selected' : ''}`}
+                        onClick={() => handleCategorySelect(cat.label)}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <input
+                type="hidden"
+                id="category"
+                value={category}
+                required
+              />
+            </div>
           </div>
 
           <div className="form-group">

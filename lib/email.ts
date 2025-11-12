@@ -7,8 +7,10 @@
 import { Resend } from 'resend';
 import { CATEGORY_MAPPINGS } from '@/config';
 
-// Email "from" address - update this to your verified domain in production
-// For development, Resend allows using onboarding@resend.dev
+// Email "from" address
+// For testing: uses onboarding@resend.dev (Resend's default)
+// For production: Verify your domain at resend.com/domains and use your domain email
+// Example: 'EVP Night Shift <nightshift@edenvalleypoultry.com>'
 const EMAIL_FROM = process.env.EMAIL_FROM || 'EVP Night Shift <onboarding@resend.dev>';
 
 // Lazy initialization of Resend to avoid errors during build
