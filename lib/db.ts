@@ -6,13 +6,28 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 
-const dbPath = path.join(process.cwd(), 'data', 'messages.db');
+// Determine database path - use /tmp for serverless environments (Vercel)
+function getDbPath(): string {
+  // Check if we're in a serverless environment
+  if (process.env.VERCEL === '1') {
+    return path.join('/tmp', 'messages.db');
+  }
 
-// Ensure data directory exists
-const dataDir = path.dirname(dbPath);
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+  // Try to use local data directory
+  const localDataDir = path.join(process.cwd(), 'data');
+  try {
+    if (!fs.existsSync(localDataDir)) {
+      fs.mkdirSync(localDataDir, { recursive: true });
+    }
+    return path.join(localDataDir, 'messages.db');
+  } catch (error) {
+    // If we can't create local directory, fallback to /tmp
+    console.warn('Failed to create local data directory, using /tmp:', error);
+    return path.join('/tmp', 'messages.db');
+  }
 }
+
+const dbPath = getDbPath();
 
 let db: Database.Database | null = null;
 
