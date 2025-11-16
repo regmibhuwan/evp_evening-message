@@ -15,12 +15,17 @@ export default function SignInPage() {
 
   useEffect(() => {
     // Check if user is already signed in
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    // Only run in browser (not during build)
+    if (typeof window === 'undefined') return;
+    
+    supabase.auth.getUser().then(({ data: { user } }: { data: { user: any } }) => {
       if (user) {
         router.push('/');
       }
+    }).catch(() => {
+      // Ignore errors during build
     });
-  }, [router, supabase]);
+  }, [router]);
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
