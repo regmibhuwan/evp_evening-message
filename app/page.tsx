@@ -3,9 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { CATEGORY_MAPPINGS } from '@/config';
+import { useAuth } from '@/lib/useAuth';
+import Link from 'next/link';
 
 export default function Home() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [category, setCategory] = useState('');
   const [topic, setTopic] = useState('');
   const [message, setMessage] = useState('');
@@ -18,6 +21,22 @@ export default function Home() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
+  // Auto-fill and lock verified user info (cannot be changed)
+  useEffect(() => {
+    if (user && !isAnonymous) {
+      // Always use verified user info - cannot be changed
+      setWorkerName(user.name);
+      setWorkerEmail(user.email);
+    }
+  }, [user, isAnonymous]);
+
+  // Redirect to verification if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/verify');
+    }
+  }, [authLoading, user, router]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -110,29 +129,12 @@ export default function Home() {
     // Check if anonymous feedback is selected
     const isAnonymousFeedback = category === 'Anonymous Company Feedback' || isAnonymous;
     
-    // Require name for non-anonymous submissions
-    if (!isAnonymousFeedback && !workerName.trim()) {
-      setError('Your name is required. Please enter your name or select "Anonymous Company Feedback" for anonymous submissions.');
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Require email for non-anonymous submissions (so recipient can reply)
-    if (!isAnonymousFeedback && !workerEmail.trim()) {
-      setError('Your email address is required so the recipient can reply to your message.');
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Basic email validation
-    if (!isAnonymousFeedback && workerEmail.trim()) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(workerEmail.trim())) {
-        setError('Please enter a valid email address.');
-        setIsSubmitting(false);
-        return;
-      }
-    }
+            // Verify user is authenticated (name and email are locked to verified account)
+            if (!isAnonymousFeedback && (!user?.name || !user?.email)) {
+              setError('You must be verified with a Gmail account to send non-anonymous messages.');
+              setIsSubmitting(false);
+              return;
+            }
     
     // Validate that message has actual content (not just greeting)
     const greetingPattern = /^Dear\s+[^,\n]+,\s*\n\nI hope this message finds you well\. I am writing to you regarding:\s*\n\n/i;
@@ -143,21 +145,22 @@ export default function Home() {
       return;
     }
 
-    try {
-      const response = await fetch('/api/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          category,
-          topic: topic.trim(),
-          message: message.trim(),
-          workerName: isAnonymousFeedback ? null : workerName.trim() || null,
-          workerEmail: isAnonymousFeedback ? null : workerEmail.trim() || null,
-          isAnonymous: isAnonymousFeedback,
-        }),
-      });
+            try {
+              // Always use verified user info (cannot be spoofed)
+              const response = await fetch('/api/send', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  category,
+                  topic: topic.trim(),
+                  message: message.trim(),
+                  workerName: isAnonymousFeedback ? null : (user?.name || null),
+                  workerEmail: isAnonymousFeedback ? null : (user?.email || null),
+                  isAnonymous: isAnonymousFeedback,
+                }),
+              });
 
       // Check if response is JSON
       const contentType = response.headers.get('content-type');
@@ -180,8 +183,28 @@ export default function Home() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="container">
+        <div className="form-container">
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to /verify
+  }
+
   return (
     <div className="container">
+      <nav className="main-nav">
+        <Link href="/" className="nav-link active">Messages</Link>
+        <Link href="/carpool" className="nav-link">Carpool</Link>
+        <Link href="/housing" className="nav-link">Housing</Link>
+        <span className="nav-user">{user.email}</span>
+      </nav>
       <div className="form-container">
         <h1>EVP Night Shift Message</h1>
         <p className="subtitle">Communicate with office staffs</p>
@@ -306,13 +329,16 @@ export default function Home() {
               <div className="form-group">
                 <label htmlFor="workerName">
                   Your Name <span style={{ color: '#c33' }}>*</span>
+                  <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px', fontWeight: 'normal' }}>
+                    (Locked to your verified Gmail account)
+                  </span>
                 </label>
                 <input
                   type="text"
                   id="workerName"
-                  value={workerName}
-                  onChange={(e) => setWorkerName(e.target.value)}
-                  placeholder="Enter your full name"
+                  value={user?.name || ''}
+                  disabled
+                  style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
                   required={!isAnonymous}
                 />
               </div>
@@ -320,17 +346,20 @@ export default function Home() {
               <div className="form-group">
                 <label htmlFor="workerEmail">
                   Your Email Address <span style={{ color: '#c33' }}>*</span>
+                  <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px', fontWeight: 'normal' }}>
+                    (Locked to your verified Gmail account)
+                  </span>
                 </label>
                 <input
                   type="email"
                   id="workerEmail"
-                  value={workerEmail}
-                  onChange={(e) => setWorkerEmail(e.target.value)}
-                  placeholder="your.email@example.com"
+                  value={user?.email || ''}
+                  disabled
+                  style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
                   required={!isAnonymous}
                 />
                 <small style={{ display: 'block', marginTop: '4px', color: '#666', fontSize: '14px' }}>
-                  This allows the recipient to reply directly to your email.
+                  This is your verified Gmail address. Recipients can reply directly to this email.
                 </small>
               </div>
             </>

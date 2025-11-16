@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CATEGORY_MAPPINGS } from '@/config';
 import { sendEmail } from '@/lib/email';
+import { getSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication for non-anonymous messages
+    const session = await getSession();
+    
     let body;
     try {
       body = await request.json();
@@ -14,7 +18,20 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { category, topic, message, workerName, workerEmail, isAnonymous } = body;
+    const { category, topic, message, isAnonymous } = body;
+    
+    // Check if anonymous feedback
+    const isAnonymousFeedback = category === 'Anonymous Company Feedback' || isAnonymous;
+    
+    // For non-anonymous messages, require authentication and use verified user info
+    if (!isAnonymousFeedback) {
+      if (!session) {
+        return NextResponse.json(
+          { error: 'Authentication required. Please verify your Gmail account first.' },
+          { status: 401 }
+        );
+      }
+    }
 
     // Validation
     if (!category || !topic || !message) {
@@ -41,17 +58,19 @@ export async function POST(request: NextRequest) {
     });
 
     // Send email immediately
+    // For non-anonymous: Always use verified user info from session (prevents spoofing)
+    // For anonymous: Use null values
     try {
       await sendEmail({
         category,
         recipientEmail: categoryMapping.email,
         recipientName: categoryMapping.recipientName,
-        workerName: workerName || null,
-        workerEmail: workerEmail || null,
+        workerName: isAnonymousFeedback ? null : (session?.name || null),
+        workerEmail: isAnonymousFeedback ? null : (session?.email || null),
         topic,
         message,
         timestamp,
-        isAnonymous: isAnonymous || false,
+        isAnonymous: isAnonymousFeedback,
       });
     } catch (emailError) {
       console.error('Email sending error:', emailError);
