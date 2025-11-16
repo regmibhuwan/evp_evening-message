@@ -60,6 +60,11 @@ export async function getSession(): Promise<SessionUser | null> {
  * Verify Google ID token and create/update user
  */
 export async function verifyGoogleToken(idToken: string): Promise<User> {
+  if (!GOOGLE_CLIENT_ID) {
+    console.error('GOOGLE_CLIENT_ID is not configured');
+    throw new Error('Google Client ID is not configured on the server. Please check environment variables.');
+  }
+
   const client = new OAuth2Client(GOOGLE_CLIENT_ID);
   
   try {
@@ -69,13 +74,22 @@ export async function verifyGoogleToken(idToken: string): Promise<User> {
     });
 
     const payload = ticket.getPayload();
-    if (!payload || !payload.email || !payload.name) {
-      throw new Error('Invalid Google token payload');
+    if (!payload) {
+      throw new Error('Invalid Google token: No payload received');
+    }
+
+    if (!payload.email) {
+      throw new Error('Invalid Google token: No email in payload');
+    }
+
+    if (!payload.name) {
+      // Use email as fallback if name is not available
+      payload.name = payload.email.split('@')[0];
     }
 
     // Verify it's a Gmail account
     if (!payload.email.endsWith('@gmail.com')) {
-      throw new Error('Only Gmail accounts are allowed');
+      throw new Error(`Only Gmail accounts are allowed. Your email (${payload.email}) is not a Gmail account.`);
     }
 
     // Create or update user
@@ -88,7 +102,11 @@ export async function verifyGoogleToken(idToken: string): Promise<User> {
     return user;
   } catch (error) {
     console.error('Google token verification error:', error);
-    throw new Error('Failed to verify Google account');
+    if (error instanceof Error) {
+      // Pass through specific error messages
+      throw error;
+    }
+    throw new Error('Failed to verify Google account. Please try again.');
   }
 }
 

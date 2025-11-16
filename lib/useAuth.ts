@@ -47,10 +47,15 @@ export function useAuth() {
         return { success: true };
       } else {
         const error = await response.json();
-        return { success: false, error: error.error };
+        console.error('Login error response:', error);
+        return { success: false, error: error.error || 'Login failed' };
       }
     } catch (error) {
-      return { success: false, error: 'Login failed' };
+      console.error('Login request error:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Login failed. Please check your connection and try again.' 
+      };
     }
   };
 

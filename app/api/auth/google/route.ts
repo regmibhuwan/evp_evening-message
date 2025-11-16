@@ -43,8 +43,14 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error('Google auth error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+    console.error('Error details:', {
+      message: errorMessage,
+      hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+      hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+    });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Authentication failed' },
+      { error: errorMessage },
       { status: 401 }
     );
   }

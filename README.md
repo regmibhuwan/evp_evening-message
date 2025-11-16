@@ -30,7 +30,7 @@ Create a `.env.local` file in the root directory:
 # Email Service (Resend)
 RESEND_API_KEY=your_resend_api_key_here
 EMAIL_FROM=EVP Night Shift <onboarding@resend.dev>
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3002
 
 # Google OAuth (for Gmail verification)
 GOOGLE_CLIENT_ID=your_google_client_id_here
