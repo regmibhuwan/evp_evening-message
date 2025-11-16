@@ -8,7 +8,7 @@ import Link from 'next/link';
 function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
+  const supabase = createClient(); // Safe to call - returns mock during build
   const initialStep = searchParams?.get('step') === 'phone' ? 'phone' : 'email';
   const [step, setStep] = useState<'email' | 'phone' | 'verify'>(initialStep);
   const [email, setEmail] = useState('');
@@ -22,6 +22,9 @@ function SignUpForm() {
 
   useEffect(() => {
     // Check if user is already signed in and has phone verified
+    // Only run in browser (not during build)
+    if (typeof window === 'undefined') return;
+    
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (user) {
         // Check if user has phone verified
@@ -47,8 +50,10 @@ function SignUpForm() {
           }
         }
       }
+    }).catch(() => {
+      // Ignore errors during build
     });
-  }, [router, supabase]);
+  }, [router]);
 
   const handleGoogleSignUp = async () => {
     setLoading(true);
