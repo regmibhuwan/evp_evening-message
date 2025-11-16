@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -20,7 +22,6 @@ export default function Home() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
   // Auto-fill and lock verified user info (cannot be changed)
   useEffect(() => {
     if (user && !isAnonymous) {
@@ -60,47 +61,38 @@ export default function Home() {
       if (selectedCategory) {
         const newGreeting = `Dear ${selectedCategory.recipientName},\n\nI hope this message finds you well. I am writing to you regarding:\n\n`;
         
-        // If message is empty, set the greeting
         if (!message.trim()) {
           setMessage(newGreeting);
         } else {
-          // If message exists, check if it starts with "Dear [name]" and replace it
           const dearPattern = /^Dear\s+[^,\n]+,\s*\n\nI hope this message finds you well\. I am writing to you regarding:\s*\n\n/i;
           if (dearPattern.test(message)) {
-            // Replace the greeting part
             const actualMessage = message.replace(dearPattern, '');
             setMessage(newGreeting + actualMessage);
           } else if (message.startsWith('Dear ')) {
-            // If it starts with "Dear" but different format, replace just the name part
             const nameMatch = message.match(/^Dear\s+([^,\n]+),/i);
             if (nameMatch) {
               const restOfMessage = message.substring(message.indexOf(',') + 1);
               setMessage(`Dear ${selectedCategory.recipientName},${restOfMessage}`);
             }
           } else {
-            // If no greeting, add it at the beginning
             setMessage(newGreeting + message);
           }
         }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
 
   const handleCategorySelect = (selectedCategory: string) => {
     setCategory(selectedCategory);
     setIsDropdownOpen(false);
-    // Auto-enable anonymous for Anonymous Company Feedback
     if (selectedCategory === 'Anonymous Company Feedback') {
       setIsAnonymous(true);
       setWorkerName('');
       setWorkerEmail('');
-      setMessage(''); // Clear message for anonymous
+      setMessage('');
     } else if (isAnonymous && selectedCategory !== 'Anonymous Company Feedback') {
-      // Keep anonymous state if user manually checked it
-      // Only clear if switching away from anonymous category
+      setIsAnonymous(false);
     }
-    // Message will be updated by useEffect when category changes
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -126,17 +118,15 @@ export default function Home() {
       return;
     }
 
-    // Check if anonymous feedback is selected
     const isAnonymousFeedback = category === 'Anonymous Company Feedback' || isAnonymous;
     
-            // Verify user is authenticated (name and email are locked to verified account)
-            if (!isAnonymousFeedback && (!user?.name || !user?.email)) {
-              setError('You must be verified with a Gmail account to send non-anonymous messages.');
-              setIsSubmitting(false);
-              return;
-            }
+    // Verify user is authenticated (name and email are locked to verified account)
+    if (!isAnonymousFeedback && (!user?.name || !user?.email)) {
+      setError('You must be verified with a Gmail account to send non-anonymous messages.');
+      setIsSubmitting(false);
+      return;
+    }
     
-    // Validate that message has actual content (not just greeting)
     const greetingPattern = /^Dear\s+[^,\n]+,\s*\n\nI hope this message finds you well\. I am writing to you regarding:\s*\n\n/i;
     const messageWithoutGreeting = message.replace(greetingPattern, '').trim();
     if (!messageWithoutGreeting) {
@@ -145,23 +135,23 @@ export default function Home() {
       return;
     }
 
-            try {
-              // Always use verified user info (cannot be spoofed)
-              const response = await fetch('/api/send', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  category,
-                  topic: topic.trim(),
-                  message: message.trim(),
-                  workerName: isAnonymousFeedback ? null : (user?.name || null),
-                  workerEmail: isAnonymousFeedback ? null : (user?.email || null),
-                  workerPhone: isAnonymousFeedback ? null : (user?.phone || null),
-                  isAnonymous: isAnonymousFeedback,
-                }),
-              });
+    try {
+      // Always use verified user info (cannot be spoofed)
+      const response = await fetch('/api/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          category,
+          topic: topic.trim(),
+          message: message.trim(),
+          workerName: isAnonymousFeedback ? null : (user?.name || null),
+          workerEmail: isAnonymousFeedback ? null : (user?.email || null),
+          workerPhone: isAnonymousFeedback ? null : (user?.phone || null),
+          isAnonymous: isAnonymousFeedback,
+        }),
+      });
 
       // Check if response is JSON
       const contentType = response.headers.get('content-type');
@@ -176,7 +166,6 @@ export default function Home() {
         throw new Error(data.error || 'Failed to send message');
       }
 
-      // Redirect to success page
       router.push('/success');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -195,7 +184,7 @@ export default function Home() {
   }
 
   if (!user) {
-    return null; // Will redirect to /verify
+    return null; // Will redirect to /signin
   }
 
   return (
@@ -331,7 +320,7 @@ export default function Home() {
                 <label htmlFor="workerName">
                   Your Name <span style={{ color: '#c33' }}>*</span>
                   <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px', fontWeight: 'normal' }}>
-                    (Locked to your verified Gmail account)
+                    (Locked to your account)
                   </span>
                 </label>
                 <input
@@ -398,4 +387,3 @@ export default function Home() {
     </div>
   );
 }
-
