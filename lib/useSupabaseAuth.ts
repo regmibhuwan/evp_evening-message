@@ -5,11 +5,17 @@ import { createClient } from '@/lib/supabase/client';
 import type { User } from '@/lib/supabase/db';
 
 export function useSupabaseAuth() {
-  const supabase = createClient();
+  const supabase = createClient(); // Returns mock during build
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Only run in browser (not during build)
+    if (typeof window === 'undefined') {
+      setLoading(false);
+      return;
+    }
+    
     checkUser();
 
     // Listen for auth changes
@@ -25,11 +31,13 @@ export function useSupabaseAuth() {
     });
 
     return () => {
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
   const checkUser = async () => {
+    if (typeof window === 'undefined') return;
+    
     try {
       const {
         data: { user: authUser },
@@ -49,6 +57,8 @@ export function useSupabaseAuth() {
   };
 
   const fetchUserProfile = async (userId: string) => {
+    if (typeof window === 'undefined') return;
+    
     try {
       const { data, error } = await supabase
         .from('users')
@@ -70,6 +80,8 @@ export function useSupabaseAuth() {
   };
 
   const logout = async () => {
+    if (typeof window === 'undefined') return;
+    
     await supabase.auth.signOut();
     setUser(null);
     window.location.href = '/signin';
