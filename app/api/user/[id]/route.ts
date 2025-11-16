@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserById } from '@/lib/db';
+import { getUserById } from '@/lib/supabase/db';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const userId = parseInt(params.id);
-    if (isNaN(userId)) {
-      return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
-    }
+    const userId = params.id; // Supabase uses UUID strings, not integers
 
-    const user = getUserById(userId);
+    const user = await getUserById(userId);
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -21,6 +18,7 @@ export async function GET(
       id: user.id,
       email: user.email,
       name: user.name,
+      phone: user.phone,
     });
   } catch (error) {
     console.error('Error fetching user:', error);

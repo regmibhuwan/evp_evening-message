@@ -4,13 +4,15 @@ A comprehensive mobile-first web app for night shift workers to communicate with
 
 ## Features
 
-- **Gmail Verification** - One-click Gmail authentication for secure identity verification
+- **Sign Up / Sign In** - Email/password or Google OAuth authentication
+- **Phone Verification** - SMS verification for phone numbers during sign up
+- **Locked User Info** - Name, email, and phone number are locked after sign up to prevent spam
 - **Night Shift Messages** - Submit messages to office staff with category-based routing
 - **Carpool System** - Offer or request carpools with chat functionality
 - **Housing/Rentals** - Post and browse housing listings with contact exchange
 - **Real-time Chat** - Chat with other users on carpool and housing posts
 - **Email Notifications** - Receive email notifications for new chat messages
-- **Contact Exchange** - Securely exchange contact information with other users
+- **Contact Exchange** - Securely exchange contact information with other users (including phone numbers)
 - **Mobile-first design** - Optimized for phone use
 - **Anonymous feedback option** - Submit feedback anonymously for sensitive matters
 
@@ -32,13 +34,14 @@ RESEND_API_KEY=your_resend_api_key_here
 EMAIL_FROM=EVP Night Shift <onboarding@resend.dev>
 NEXT_PUBLIC_APP_URL=http://localhost:3002
 
-# Google OAuth (for Gmail verification)
+# Supabase (Database and Authentication)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Google OAuth (for Google sign in)
 GOOGLE_CLIENT_ID=your_google_client_id_here
 GOOGLE_CLIENT_SECRET=your_google_client_secret_here
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id_here
-
-# JWT Secret (for session management)
-JWT_SECRET=your_random_secret_key_here
 ```
 
 **Getting Required API Keys:**
@@ -67,6 +70,7 @@ JWT_SECRET=your_random_secret_key_here
 - Verify your sending domain in Resend
 - Update `EMAIL_FROM` to use your verified domain (e.g., `EVP Night Shift <messages@yourdomain.com>`)
 - Update Google OAuth authorized origins and redirect URIs with your production URL
+- Set up phone verification SMS service (Twilio, AWS SNS, etc.) - currently uses console logging in development
 
 ### 3. Run Development Server
 
@@ -118,10 +122,7 @@ Make sure to set:
 
 ### Database
 
-The SQLite database is stored in the `data/` directory. For production, consider:
-- Using a managed database service (PostgreSQL, MySQL)
-- Backing up the database regularly
-- Using environment-specific database paths
+The app uses Supabase (PostgreSQL) for all data storage. The database schema is defined in `supabase/migrations/001_initial_schema.sql`. Run this migration in your Supabase project's SQL Editor.
 
 ## Project Structure
 
@@ -143,11 +144,17 @@ evp/
 │   ├── layout.tsx             # Root layout
 │   ├── page.tsx               # Main night shift message form
 │   └── globals.css            # Global styles
-├── lib/
-│   ├── auth.ts               # Authentication utilities (JWT, Google OAuth)
-│   ├── db.ts                 # Database utilities (SQLite)
-│   ├── email.ts              # Email sending utilities
-│   └── useAuth.ts            # Client-side auth hook
+        ├── lib/
+        │   ├── supabase/             # Supabase client utilities
+        │   │   ├── client.ts         # Browser client
+        │   │   ├── server.ts         # Server client
+        │   │   ├── middleware.ts     # Middleware for auth
+        │   │   └── db.ts             # Database functions
+        │   ├── email.ts              # Email sending utilities
+        │   └── useSupabaseAuth.ts   # Client-side auth hook
+        ├── supabase/
+        │   └── migrations/           # Database migrations
+        │       └── 001_initial_schema.sql
 ├── config.ts                 # Configuration and category mappings
 ├── data/                     # SQLite database directory
 ├── package.json

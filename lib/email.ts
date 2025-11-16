@@ -28,6 +28,7 @@ export interface EmailData {
   recipientName: string;
   workerName: string | null;
   workerEmail: string | null;
+  workerPhone: string | null;
   topic: string;
   message: string;
   timestamp: string;
@@ -106,8 +107,9 @@ ${greeting ? `<p>${escapeHtml(greeting).replace(/\n/g, '<br>')}</p>` : ''}${actu
 ${greeting ? `<p>${escapeHtml(greeting).replace(/\n/g, '<br>')}</p>` : ''}${actualMessage ? `<p><strong>MESSAGE:</strong></p>
 <p>${escapeHtml(actualMessage).replace(/\n/g, '<br>')}</p>` : ''}
 
-${data.workerName && data.workerEmail ? `<p>${escapeHtml(data.workerName)}<br>${escapeHtml(data.workerEmail)}</p>` : data.workerEmail ? `<p>From: ${escapeHtml(data.workerEmail)}</p>` : ''}
-${categoryMapping.phoneExt ? `<p>Phone Extension: ${escapeHtml(categoryMapping.phoneExt)}</p>` : ''}
+        ${data.workerName && data.workerEmail ? `<p>${escapeHtml(data.workerName)}<br>${escapeHtml(data.workerEmail)}</p>` : data.workerEmail ? `<p>From: ${escapeHtml(data.workerEmail)}</p>` : ''}
+        ${data.workerPhone ? `<p>Phone: ${escapeHtml(data.workerPhone)}</p>` : ''}
+        ${categoryMapping.phoneExt ? `<p>Phone Extension: ${escapeHtml(categoryMapping.phoneExt)}</p>` : ''}
 
 <hr>
 <p><small>Submitted via EVP Night Shift Message Sender<br>Date: ${escapeHtml(data.timestamp)}</small></p>
@@ -131,8 +133,9 @@ ${greeting ? greeting : ''}${actualMessage ? `MESSAGE:
 
 ${actualMessage}` : ''}
 
-${data.workerName && data.workerEmail ? `${data.workerName}\n${data.workerEmail}` : data.workerEmail ? `From: ${data.workerEmail}` : ''}
-${categoryMapping.phoneExt ? `Phone Extension: ${categoryMapping.phoneExt}` : ''}
+        ${data.workerName && data.workerEmail ? `${data.workerName}\n${data.workerEmail}` : data.workerEmail ? `From: ${data.workerEmail}` : ''}
+        ${data.workerPhone ? `Phone: ${data.workerPhone}` : ''}
+        ${categoryMapping.phoneExt ? `Phone Extension: ${categoryMapping.phoneExt}` : ''}
 
 ---
 Submitted via EVP Night Shift Message Sender

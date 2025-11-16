@@ -3,13 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/lib/useAuth';
-import type { HousingPost } from '@/lib/db';
+import { useSupabaseAuth } from '@/lib/useSupabaseAuth';
+import type { HousingPost } from '@/lib/supabase/db';
 
 interface ChatMessage {
   id: number;
-  sender_id: number;
-  receiver_id: number;
+  sender_id: string;
+  receiver_id: string;
   message: string;
   created_at: string;
   senderName: string;
@@ -19,19 +19,19 @@ interface ChatMessage {
 export default function HousingDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useSupabaseAuth();
   const [post, setPost] = useState<HousingPost | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [contactExchanged, setContactExchanged] = useState(false);
-  const [contactInfo, setContactInfo] = useState<{ name: string; email: string } | null>(null);
+  const [contactInfo, setContactInfo] = useState<{ name: string; email: string; phone?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/verify');
+      router.push('/signin');
     }
   }, [authLoading, user, router]);
 
@@ -246,14 +246,21 @@ export default function HousingDetailPage() {
                 <h3>Contact Information</h3>
                 <p><strong>Name:</strong> {contactInfo.name}</p>
                 <p><strong>Email:</strong> {contactInfo.email}</p>
+                {contactInfo.phone && (
+                  <p><strong>Phone:</strong> {contactInfo.phone}</p>
+                )}
                 <p style={{ marginTop: '12px' }}>
                   <a href={`mailto:${contactInfo.email}`} style={{ color: '#4a90e2' }}>
                     Send Email
                   </a>
-                  {' • '}
-                  <a href={`tel:${contactInfo.email}`} style={{ color: '#4a90e2' }}>
-                    Call
-                  </a>
+                  {contactInfo.phone && (
+                    <>
+                      {' • '}
+                      <a href={`tel:${contactInfo.phone}`} style={{ color: '#4a90e2' }}>
+                        Call
+                      </a>
+                    </>
+                  )}
                 </p>
               </div>
             ) : (

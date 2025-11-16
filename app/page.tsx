@@ -3,12 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { CATEGORY_MAPPINGS } from '@/config';
-import { useAuth } from '@/lib/useAuth';
+import { useSupabaseAuth } from '@/lib/useSupabaseAuth';
 import Link from 'next/link';
 
 export default function Home() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useSupabaseAuth();
   const [category, setCategory] = useState('');
   const [topic, setTopic] = useState('');
   const [message, setMessage] = useState('');
@@ -30,10 +30,10 @@ export default function Home() {
     }
   }, [user, isAnonymous]);
 
-  // Redirect to verification if not authenticated
+  // Redirect to sign in if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/verify');
+      router.push('/signin');
     }
   }, [authLoading, user, router]);
 
@@ -158,6 +158,7 @@ export default function Home() {
                   message: message.trim(),
                   workerName: isAnonymousFeedback ? null : (user?.name || null),
                   workerEmail: isAnonymousFeedback ? null : (user?.email || null),
+                  workerPhone: isAnonymousFeedback ? null : (user?.phone || null),
                   isAnonymous: isAnonymousFeedback,
                 }),
               });
@@ -347,7 +348,7 @@ export default function Home() {
                 <label htmlFor="workerEmail">
                   Your Email Address <span style={{ color: '#c33' }}>*</span>
                   <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px', fontWeight: 'normal' }}>
-                    (Locked to your verified Gmail account)
+                    (Locked to your account)
                   </span>
                 </label>
                 <input
@@ -359,7 +360,27 @@ export default function Home() {
                   required={!isAnonymous}
                 />
                 <small style={{ display: 'block', marginTop: '4px', color: '#666', fontSize: '14px' }}>
-                  This is your verified Gmail address. Recipients can reply directly to this email.
+                  This is your verified email address. Recipients can reply directly to this email.
+                </small>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="workerPhone">
+                  Your Phone Number <span style={{ color: '#c33' }}>*</span>
+                  <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px', fontWeight: 'normal' }}>
+                    (Locked to your account)
+                  </span>
+                </label>
+                <input
+                  type="tel"
+                  id="workerPhone"
+                  value={user?.phone || ''}
+                  disabled
+                  style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                  required={!isAnonymous}
+                />
+                <small style={{ display: 'block', marginTop: '4px', color: '#666', fontSize: '14px' }}>
+                  This is your verified phone number from sign up.
                 </small>
               </div>
             </>

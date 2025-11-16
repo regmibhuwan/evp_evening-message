@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CATEGORY_MAPPINGS } from '@/config';
 import { sendEmail } from '@/lib/email';
-import { getSession } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
+import { getUserById } from '@/lib/supabase/db';
 
 export async function POST(request: NextRequest) {
   try {
-    // Require authentication for non-anonymous messages
-    const session = await getSession();
+    const supabase = await createClient();
+    
+    // Get authenticated user
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
     
     let body;
     try {
@@ -24,10 +27,19 @@ export async function POST(request: NextRequest) {
     const isAnonymousFeedback = category === 'Anonymous Company Feedback' || isAnonymous;
     
     // For non-anonymous messages, require authentication and use verified user info
+    let user = null;
     if (!isAnonymousFeedback) {
-      if (!session) {
+      if (!authUser) {
         return NextResponse.json(
-          { error: 'Authentication required. Please verify your Gmail account first.' },
+          { error: 'Authentication required. Please sign in first.' },
+          { status: 401 }
+        );
+      }
+      // Fetch user profile from database
+      user = await getUserById(authUser.id);
+      if (!user) {
+        return NextResponse.json(
+          { error: 'User profile not found. Please complete your sign up.' },
           { status: 401 }
         );
       }
@@ -58,15 +70,16 @@ export async function POST(request: NextRequest) {
     });
 
     // Send email immediately
-    // For non-anonymous: Always use verified user info from session (prevents spoofing)
+    // For non-anonymous: Always use verified user info from database (prevents spoofing)
     // For anonymous: Use null values
     try {
       await sendEmail({
         category,
         recipientEmail: categoryMapping.email,
         recipientName: categoryMapping.recipientName,
-        workerName: isAnonymousFeedback ? null : (session?.name || null),
-        workerEmail: isAnonymousFeedback ? null : (session?.email || null),
+        workerName: isAnonymousFeedback ? null : (user?.name || null),
+        workerEmail: isAnonymousFeedback ? null : (user?.email || null),
+        workerPhone: isAnonymousFeedback ? null : (user?.phone || null),
         topic,
         message,
         timestamp,

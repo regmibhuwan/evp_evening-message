@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
 import {
   createCarpoolPost,
   getCarpoolPosts,
   getCarpoolPostById,
   deleteCarpoolPost,
-} from '@/lib/db';
+} from '@/lib/supabase/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,14 +13,14 @@ export async function GET(request: NextRequest) {
     const id = searchParams.get('id');
 
     if (id) {
-      const post = getCarpoolPostById(parseInt(id));
+      const post = await getCarpoolPostById(parseInt(id));
       if (!post) {
         return NextResponse.json({ error: 'Post not found' }, { status: 404 });
       }
       return NextResponse.json({ post });
     }
 
-    const posts = getCarpoolPosts();
+    const posts = await getCarpoolPosts();
     return NextResponse.json({ posts });
   } catch (error) {
     console.error('Error fetching carpool posts:', error);
@@ -33,8 +33,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -55,8 +57,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const postId = createCarpoolPost({
-      user_id: session.id,
+    const postId = await createCarpoolPost({
+      user_id: user.id,
       type,
       starting_point,
       destination,
@@ -79,8 +81,10 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -91,7 +95,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Post ID required' }, { status: 400 });
     }
 
-    const deleted = deleteCarpoolPost(parseInt(id), session.id);
+    const deleted = await deleteCarpoolPost(parseInt(id), user.id);
     if (!deleted) {
       return NextResponse.json(
         { error: 'Post not found or unauthorized' },

@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
-import { createContactExchange, getContactExchange, getUserById } from '@/lib/db';
+import { createClient } from '@/lib/supabase/server';
+import { createContactExchange, getContactExchange, getUserById } from '@/lib/supabase/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -27,16 +29,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Create contact exchange
-    const exchangeId = createContactExchange({
-      user1_id: session.id,
-      user2_id: parseInt(other_user_id),
+    const exchangeId = await createContactExchange({
+      user1_id: user.id,
+      user2_id: other_user_id,
       post_id: parseInt(post_id),
       post_type,
-      contact_shared_by: session.id,
+      contact_shared_by: user.id,
     });
 
     // Get other user's info to return
-    const otherUser = getUserById(parseInt(other_user_id));
+    const otherUser = await getUserById(other_user_id);
 
     return NextResponse.json({
       success: true,
@@ -45,6 +47,7 @@ export async function POST(request: NextRequest) {
         ? {
             name: otherUser.name,
             email: otherUser.email,
+            phone: otherUser.phone,
           }
         : null,
     });
@@ -59,8 +62,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -76,9 +81,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const exchange = getContactExchange(
-      session.id,
-      parseInt(other_user_id),
+    const exchange = await getContactExchange(
+      user.id,
+      other_user_id,
       parseInt(post_id),
       post_type
     );
@@ -88,7 +93,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get other user's info
-    const otherUser = getUserById(parseInt(other_user_id));
+    const otherUser = await getUserById(other_user_id);
 
     return NextResponse.json({
       exchanged: true,
@@ -96,6 +101,7 @@ export async function GET(request: NextRequest) {
         ? {
             name: otherUser.name,
             email: otherUser.email,
+            phone: otherUser.phone,
           }
         : null,
     });

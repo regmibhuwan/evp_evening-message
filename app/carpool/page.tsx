@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/lib/useAuth';
-import type { CarpoolPost } from '@/lib/db';
+import { useSupabaseAuth } from '@/lib/useSupabaseAuth';
+import type { CarpoolPost } from '@/lib/supabase/db';
 
 export default function CarpoolPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useSupabaseAuth();
   const [posts, setPosts] = useState<CarpoolPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -27,7 +27,7 @@ export default function CarpoolPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/verify');
+      router.push('/signin');
     }
   }, [authLoading, user, router]);
 

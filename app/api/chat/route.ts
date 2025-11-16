@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
-import { createChatMessage, getChatMessages, getUserById } from '@/lib/db';
+import { createClient } from '@/lib/supabase/server';
+import { createChatMessage, getChatMessages, getUserById } from '@/lib/supabase/db';
 import { sendEmail } from '@/lib/email';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -28,12 +30,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const messages = getChatMessages(parseInt(postId), postType);
+    const messages = await getChatMessages(parseInt(postId), postType);
     
     // Include sender names
     const messagesWithNames = await Promise.all(
       messages.map(async (msg) => {
-        const sender = getUserById(msg.sender_id);
+        const sender = await getUserById(msg.sender_id);
         return {
           ...msg,
           senderName: sender?.name || 'Unknown',
@@ -54,8 +56,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -77,9 +81,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create chat message
-    const messageId = createChatMessage({
-      sender_id: session.id,
-      receiver_id: parseInt(receiver_id),
+    const messageId = await createChatMessage({
+      sender_id: user.id,
+      receiver_id: receiver_id,
       post_id: parseInt(post_id),
       post_type,
       message,
@@ -87,16 +91,18 @@ export async function POST(request: NextRequest) {
 
     // Send email notification to receiver
     try {
-      const receiver = getUserById(parseInt(receiver_id));
-      if (receiver) {
+      const receiver = await getUserById(receiver_id);
+      const sender = await getUserById(user.id);
+      if (receiver && sender) {
         const postTypeLabel = post_type === 'carpool' ? 'Carpool' : 'Housing';
         await sendEmail({
           category: 'Chat Notification',
           recipientEmail: receiver.email,
           recipientName: receiver.name,
-          workerName: session.name,
-          workerEmail: session.email,
-          topic: `New message from ${session.name} - ${postTypeLabel} Post #${post_id}`,
+          workerName: sender.name,
+          workerEmail: sender.email,
+          workerPhone: sender.phone,
+          topic: `New message from ${sender.name} - ${postTypeLabel} Post #${post_id}`,
           message: `You have received a new message:\n\n${message}\n\nYou can view and reply to this message on the platform.`,
           timestamp: new Date().toLocaleString('en-US', {
             timeZone: 'America/Halifax',

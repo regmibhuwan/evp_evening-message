@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
 import {
   createHousingPost,
   getHousingPosts,
   getHousingPostById,
   deleteHousingPost,
-} from '@/lib/db';
+} from '@/lib/supabase/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,14 +13,14 @@ export async function GET(request: NextRequest) {
     const id = searchParams.get('id');
 
     if (id) {
-      const post = getHousingPostById(parseInt(id));
+      const post = await getHousingPostById(parseInt(id));
       if (!post) {
         return NextResponse.json({ error: 'Post not found' }, { status: 404 });
       }
       return NextResponse.json({ post });
     }
 
-    const posts = getHousingPosts();
+    const posts = await getHousingPosts();
     return NextResponse.json({ posts });
   } catch (error) {
     console.error('Error fetching housing posts:', error);
@@ -33,8 +33,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -55,8 +57,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const postId = createHousingPost({
-      user_id: session.id,
+    const postId = await createHousingPost({
+      user_id: user.id,
       location,
       type,
       title,
@@ -77,8 +79,10 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -89,7 +93,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Post ID required' }, { status: 400 });
     }
 
-    const deleted = deleteHousingPost(parseInt(id), session.id);
+    const deleted = await deleteHousingPost(parseInt(id), user.id);
     if (!deleted) {
       return NextResponse.json(
         { error: 'Post not found or unauthorized' },

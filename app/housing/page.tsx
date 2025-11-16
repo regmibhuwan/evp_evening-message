@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/lib/useAuth';
-import type { HousingPost } from '@/lib/db';
+import { useSupabaseAuth } from '@/lib/useSupabaseAuth';
+import type { HousingPost } from '@/lib/supabase/db';
 
 export default function HousingPage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useSupabaseAuth();
   const [posts, setPosts] = useState<HousingPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -25,7 +25,7 @@ export default function HousingPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/verify');
+      router.push('/signin');
     }
   }, [authLoading, user, router]);
 
