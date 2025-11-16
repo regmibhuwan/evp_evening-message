@@ -25,7 +25,8 @@ function SignUpForm() {
     // Only run in browser (not during build)
     if (typeof window === 'undefined') return;
     
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    supabase.auth.getUser().then(async (response: { data: { user: any; error: any } }) => {
+      const { user } = response.data;
       if (user) {
         // Check if user has phone verified
         const { data: userProfile } = await supabase
