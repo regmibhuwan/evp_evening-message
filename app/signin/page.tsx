@@ -18,7 +18,8 @@ export default function SignInPage() {
     // Only run in browser (not during build)
     if (typeof window === 'undefined') return;
     
-    supabase.auth.getUser().then(({ data: { user } }: { data: { user: any } }) => {
+    supabase.auth.getUser().then((response: { data: { user: any; error: any } }) => {
+      const { user } = response.data;
       if (user) {
         router.push('/');
       }
